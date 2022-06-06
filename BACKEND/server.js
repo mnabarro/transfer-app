@@ -3,6 +3,8 @@ const authRouter = require("./routes/auth.router");
 const app = express();
 const db = require("./models");
 
+require('dotenv').config();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

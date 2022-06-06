@@ -1,7 +1,7 @@
 const db = require('../models');
 const bcryptjs = require('bcryptjs');
 const { Op } = require('sequelize');
-
+const {generateAccessToken, generateRefreshToken } = require('../helpers/authTokens');
 const authController = {
 
     signup: async (req, res) => {
@@ -67,10 +67,32 @@ const authController = {
         }
     },
 
-    login: (req, res) => {
-        return res.status(200).json({
-            message: '/auth/login'
+    login: async (req, res) => {
+
+
+        let usr = await db.Users.findOne({
+            where: {
+                email: {
+                    [Op.like]: req.body.email
+                }
+            }
         });
+
+        if (!usr) {
+            return res.status(404).json({
+                message: 'User not found.'
+            });
+        }
+
+        if (await bcryptjs.compare(req.body.password, usr.password)) {
+            const accessToken = generateAccessToken ({user: req.body.email});
+            const refreshToken = generateRefreshToken ({user: req.body.email});
+            return res.json ({accessToken, refreshToken});
+            } 
+            else {
+            return res.status(401).json({message: 'Password incorrect'});
+            }
+
     },
 
     logout: (req, res) => {
