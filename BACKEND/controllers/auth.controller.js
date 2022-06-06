@@ -1,7 +1,7 @@
 const db = require('../models');
 const bcryptjs = require('bcryptjs');
 const { Op } = require('sequelize');
-const {generateAccessToken, generateRefreshToken } = require('../helpers/authTokens');
+const {generateAccessToken, generateRefreshToken, verifyToken } = require('../helpers/authTokens');
 const authController = {
 
     signup: async (req, res) => {
@@ -85,14 +85,64 @@ const authController = {
         }
 
         if (await bcryptjs.compare(req.body.password, usr.password)) {
-            const accessToken = generateAccessToken ({user: req.body.email});
-            const refreshToken = generateRefreshToken ({user: req.body.email});
+            const accessToken = generateAccessToken ({user: usr.uuid});
+            const refreshToken = generateRefreshToken ({user: usr.uuid});
             return res.json ({accessToken, refreshToken});
             } 
             else {
             return res.status(401).json({message: 'Password incorrect'});
             }
 
+    },
+
+    refresh: async (req, res) => {
+
+        const token = req.body.refreshToken;
+        
+        if (!token) {
+            return res.status(401).json({
+                message: 'Refresh token not present.'
+            });
+        }    
+        
+        const  tokenInDb = await db.Tokens.findOne({
+            where: {
+                token: {
+                    [Op.like]: token
+                }
+            }
+        });
+        
+        if (!tokenInDb) {
+            return res.status(400).json({
+                message: 'Refresh token has no authorization.'
+            });
+        }    
+
+        try {
+            const verify = verifyToken(token);
+
+            if ( verify ) {
+                return res.status(201).json({
+                    message: 'OK!'
+                });    
+            }
+        } catch ( err ) {
+
+            db.Tokens.destroy({
+                where: {
+                    token: {
+                        [Op.like]: token
+                    }
+                }                            
+            });
+
+            return res.status(401).json({
+                message: err.message
+            });
+        }
+
+        
     },
 
     logout: (req, res) => {

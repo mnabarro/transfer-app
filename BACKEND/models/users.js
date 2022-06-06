@@ -71,7 +71,11 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty : true,
         isDate : true
       }
-    }
+    },
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4    
+    },
   }, {
     sequelize,
     modelName: 'Users',

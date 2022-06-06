@@ -1,24 +1,28 @@
 const jwt = require('jsonwebtoken');
+const db = require ('../models');
 
-function generateAccessToken(user) {
+const generateAccessToken = (user) => {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "15m"
+        expiresIn: "1m"
     })
 }
 
-// refreshTokens
-let refreshTokens = []
-
-function generateRefreshToken(user) {
+const generateRefreshToken = (user) => {
     const refreshToken =
         jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: "20m"
+            expiresIn: "2m"
         })
-    refreshTokens.push(refreshToken)
+    db.Tokens.create({token: refreshToken});
+
     return refreshToken
+}
+
+const verifyToken = ( token ) => {
+    return jwt.verify( token, process.env.REFRESH_TOKEN_SECRET );
 }
 
 module.exports = {
     generateAccessToken,
-    generateRefreshToken
+    generateRefreshToken,
+    verifyToken
 }

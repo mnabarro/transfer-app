@@ -17,7 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Accounts.init({
-    uuid: DataTypes.UUID,
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4    
+    },
     users_id: DataTypes.INTEGER,
     balance: DataTypes.DECIMAL(10,3),
     active: DataTypes.INTEGER
